@@ -4,8 +4,7 @@ from fastapi import HTTPException, status
 import os
 import shutil
 from functools import lru_cache
-from pathlib import Path
-from typing import Any, List, Union, Optional
+from typing import Optional
 
 from datetime import timedelta
 
@@ -32,7 +31,7 @@ app = FastAPI()
 @lru_cache(maxsize=1)
 def get_whisper_model(whisper_model: str):
     """Get a whisper model from the cache or download it if it doesn't exist"""
-    model = whisper.load_model(whisper_model)
+    model = whisper.load_model(whisper_model, in_memory=True)
     return model
 
 def transcribe(audio_path: str, whisper_model: str, **whisper_args):
@@ -62,7 +61,7 @@ def transcribe(audio_path: str, whisper_model: str, **whisper_args):
 
 WHISPER_DEFAULT_SETTINGS = {
 #    "whisper_model": "base",
-    "whisper_model": "large-v2",
+    "whisper_model": "/model.bin",
     "temperature": 0.0,
     "temperature_increment_on_fallback": 0.2,
     "no_speech_threshold": 0.6,
@@ -86,7 +85,7 @@ async def transcriptions(model: str = Form(...),
                          temperature: Optional[float] = Form(None),
                          language: Optional[str] = Form(None)):
 
-    assert model == "whisper-1"
+    assert model == "/model.bin"
     if file is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
